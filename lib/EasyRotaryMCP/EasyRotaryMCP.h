@@ -5,10 +5,15 @@
 #include <RotaryEncOverMCP.h>
 
 class EasyRotary{
+
 public :
 EasyRotary();
-void checkInterrupt();
+bool checkInterrupt();
 void startup();
+bool getClockwise();
+int getId();
+
 private:
+
 };
 #endif

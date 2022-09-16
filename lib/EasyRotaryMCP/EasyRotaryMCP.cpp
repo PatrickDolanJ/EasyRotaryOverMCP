@@ -34,6 +34,23 @@
 /* Our I2C MCP23017 GPIO expanders */
 Adafruit_MCP23017 mcp;
 
+ class RotaryData{
+    public:
+    volatile bool clockwise;
+    volatile int id;
+};
+
+RotaryData data;
+
+bool EasyRotary::getClockwise(){
+    return data.clockwise;
+}
+
+int EasyRotary::getId(){
+    return data.id;
+}
+
+
 //Array of pointers of all MCPs if there is more than one
 Adafruit_MCP23017* allMCPs[] = { &mcp };
 constexpr int numMCPs = (int)(sizeof(allMCPs) / sizeof(*allMCPs));
@@ -48,6 +65,8 @@ void RotaryEncoderChanged(bool clockwise, int id);
  * D3 or D2.
  * */
 byte arduinoIntPin = 2;
+
+
 
 
 /* variable to indicate that an interrupt has occured */
@@ -70,13 +89,14 @@ RotaryEncOverMCP rotaryEncoders[] = {
 };
 constexpr int numEncoders = (int)(sizeof(rotaryEncoders) / sizeof(*rotaryEncoders));
 void RotaryEncoderChanged(bool clockwise, int id) {
-    Serial.println("Encoder " + String(id) + ": "
-            + (clockwise ? String("clockwise") : String("counter-clock-wise")));
+    
+    //  Serial.println("Encoder " + String(id) + ": "
+    //          + (clockwise ? String("clockwise") : String("counter-clock-wise")));
+            data.clockwise = clockwise;
+            data.id = id; 
 }
 
 void EasyRotary::startup(){
-    Serial.println("Startup start");
-
     pinMode(arduinoIntPin,INPUT);
     
     mcp.begin();      // use default address 0
@@ -94,11 +114,10 @@ void EasyRotary::startup(){
         rotaryEncoders[i].init();
     }
     attachInterrupt(digitalPinToInterrupt(arduinoIntPin), intCallBack, FALLING);
-    Serial.println("Startup finished");
 }
 
 EasyRotary::EasyRotary(){
-    Serial.println("MCP23017 Interrupt Test");
+    Serial.println("MCP23017 Interrupt");
 }
 
 // The int handler will just signal that the int has happened
@@ -107,14 +126,14 @@ void INTERRUPT_FUNC_ATTRIB intCallBack() {
     awakenByInterrupt=true;
 }
 
-void EasyRotary::checkInterrupt() {
+bool EasyRotary::checkInterrupt() {
     if(awakenByInterrupt) {
         // disable interrupts while handling them.
-        Serial.println("Interup Detected");
         detachInterrupt(digitalPinToInterrupt(arduinoIntPin));
         handleInterrupt();
         attachInterrupt(digitalPinToInterrupt(arduinoIntPin),intCallBack,FALLING);
     }
+    return awakenByInterrupt;
 }
 
 void handleInterrupt(){
@@ -136,7 +155,6 @@ void handleInterrupt(){
                 rotaryEncoders[i].feedInput(gpioAB);
         }
     }
-
     cleanInterrupts();
 }
 
@@ -148,8 +166,3 @@ void cleanInterrupts(){
 #endif
     awakenByInterrupt=false;
 }
-
-// void loop() {
-//     //Check if an interrupt has occurred and act on it
-//     checkInterrupt();
-// }
