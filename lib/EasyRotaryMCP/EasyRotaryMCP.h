@@ -4,11 +4,19 @@
 #include <Arduino.h>
 #include <RotaryEncOverMCP.h>
 
+struct RotaryData{
+    public:
+    bool clockwise;
+    int id;
+    bool changed;
+};
+
+
 class EasyRotary{
 
 public :
 EasyRotary();
-bool checkInterrupt();
+RotaryData checkInterrupt();
 void startup();
 bool getClockwise();
 int getId();

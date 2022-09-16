@@ -34,21 +34,17 @@
 /* Our I2C MCP23017 GPIO expanders */
 Adafruit_MCP23017 mcp;
 
- class RotaryData{
-    public:
-    volatile bool clockwise;
-    volatile int id;
-};
+typedef struct RotaryData Struct;
 
 RotaryData data;
 
-bool EasyRotary::getClockwise(){
-    return data.clockwise;
-}
+// bool EasyRotary::getClockwise(){
+//     return data.clockwise;
+// }
 
-int EasyRotary::getId(){
-    return data.id;
-}
+// int EasyRotary::getId(){
+//     return data.id;
+// }
 
 
 //Array of pointers of all MCPs if there is more than one
@@ -90,10 +86,11 @@ RotaryEncOverMCP rotaryEncoders[] = {
 constexpr int numEncoders = (int)(sizeof(rotaryEncoders) / sizeof(*rotaryEncoders));
 void RotaryEncoderChanged(bool clockwise, int id) {
     
-    //  Serial.println("Encoder " + String(id) + ": "
-    //          + (clockwise ? String("clockwise") : String("counter-clock-wise")));
+    //   Serial.println("Encoder " + String(id) + ": "
+    //           + (clockwise ? String("clockwise") : String("counter-clock-wise")));
             data.clockwise = clockwise;
             data.id = id; 
+            //Serial.println(String(data.id) + String(data.clockwise));
 }
 
 void EasyRotary::startup(){
@@ -126,14 +123,16 @@ void INTERRUPT_FUNC_ATTRIB intCallBack() {
     awakenByInterrupt=true;
 }
 
-bool EasyRotary::checkInterrupt() {
+RotaryData EasyRotary::checkInterrupt() {
     if(awakenByInterrupt) {
         // disable interrupts while handling them.
         detachInterrupt(digitalPinToInterrupt(arduinoIntPin));
         handleInterrupt();
         attachInterrupt(digitalPinToInterrupt(arduinoIntPin),intCallBack,FALLING);
+        
     }
-    return awakenByInterrupt;
+    data.changed = awakenByInterrupt;
+    return data;
 }
 
 void handleInterrupt(){
