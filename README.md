@@ -5,7 +5,7 @@
 ## CHANGED
 1) Make EasyRotary object.
 2) call startup() in void setup().
-3) call checkForInterupt() in void loop().
+3) call checkInterupt() in void loop().
 
 This is a library and example code with which one can controll multiple rotary encoders over the MCP23017 I2C GPIO expander.
 
