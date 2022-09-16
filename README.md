@@ -2,7 +2,7 @@
 
 ### Description
 
-##CHANGED
+## CHANGED
 1) Make EasyRotary object.
 2) call startup() in void setup().
 3) call checkForInterupt() in void loop().
