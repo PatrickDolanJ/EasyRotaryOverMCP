@@ -17,7 +17,7 @@ class EasyRotary{
 public :
 EasyRotary();
 RotaryData checkInterrupt();
-void startup();
+void startup(void (*function)(bool,int));
 bool getClockwise();
 int getId();
 

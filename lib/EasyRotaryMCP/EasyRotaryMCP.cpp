@@ -56,6 +56,7 @@ void cleanInterrupts();
 void handleInterrupt();
 void RotaryEncoderChanged(bool clockwise, int id);
 
+
 /* the INT pin of the MCP can only be connected to
  * an interrupt capable pin on the Arduino, either
  * D3 or D2.
@@ -67,35 +68,42 @@ byte arduinoIntPin = 2;
 
 /* variable to indicate that an interrupt has occured */
 volatile boolean awakenByInterrupt = false;
+//function pointer
+typedef void (*rotaryActionFunc)(bool clockwise, int id);
+rotaryActionFunc ActionFunction = nullptr;
+void ThisIsAFunction(bool,int);
 
 //function prototypes placeholder
 
 /* Array of all rotary encoders and their pins */
 RotaryEncOverMCP rotaryEncoders[] = {
-    RotaryEncOverMCP(&mcp, 0, 1, &RotaryEncoderChanged, 1),// physical pins 21 and 22  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
-    RotaryEncOverMCP(&mcp, 2, 3, &RotaryEncoderChanged, 2),// physical pins 23 and 24  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
-    RotaryEncOverMCP(&mcp, 4, 5, &RotaryEncoderChanged, 3),// physical pins 25 and 26  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
-    RotaryEncOverMCP(&mcp, 6, 7, &RotaryEncoderChanged, 4),// physical pins 27 and 28  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
-    
-    RotaryEncOverMCP(&mcp, 8, 9, &RotaryEncoderChanged, 5),// physical pins 1 and 2  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
-    RotaryEncOverMCP(&mcp, 10, 11, &RotaryEncoderChanged, 6),// physical pins 3 and 4  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
-    RotaryEncOverMCP(&mcp, 12, 13, &RotaryEncoderChanged, 7),// physical pins 5 and 6  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
-    RotaryEncOverMCP(&mcp, 14, 15, &RotaryEncoderChanged, 8)// physical pins 7 and 8  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
+    RotaryEncOverMCP(&mcp, 0, 1, &ThisIsAFunction, 1),// physical pins 21 and 22  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
+    RotaryEncOverMCP(&mcp, 2, 3, &ThisIsAFunction, 2),// physical pins 23 and 24  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
+    RotaryEncOverMCP(&mcp, 4, 5, &ThisIsAFunction, 3),// physical pins 25 and 26  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
+    RotaryEncOverMCP(&mcp, 6, 7, &ThisIsAFunction, 4),// physical pins 27 and 28  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
+    RotaryEncOverMCP(&mcp, 8, 9, &ThisIsAFunction, 5),// physical pins 1 and 2  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
+    RotaryEncOverMCP(&mcp, 10, 11, &ThisIsAFunction, 6),// physical pins 3 and 4  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
+    RotaryEncOverMCP(&mcp, 12, 13, &ThisIsAFunction, 8)// physical pins 7 and 8  https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library/
     
 };
-constexpr int numEncoders = (int)(sizeof(rotaryEncoders) / sizeof(*rotaryEncoders));
-void RotaryEncoderChanged(bool clockwise, int id) {
-    
-    //   Serial.println("Encoder " + String(id) + ": "
-    //           + (clockwise ? String("clockwise") : String("counter-clock-wise")));
-            data.clockwise = clockwise;
-            data.id = id; 
-            //Serial.println(String(data.id) + String(data.clockwise));
+constexpr int numEncoders = (int)(sizeof(rotaryEncoders)/sizeof(*rotaryEncoders));
+void ThisIsAFunction(bool clockwise,int id){
+    ActionFunction(clockwise, id);
 }
 
-void EasyRotary::startup(){
-    pinMode(arduinoIntPin,INPUT);
+
+// void RotaryEncoderChanged(bool clockwise, int id) {
     
+//     //   Serial.println("Encoder " + String(id) + ": "
+//     //           + (clockwise ? String("clockwise") : String("counter-clock-wise")));
+//             data.clockwise = clockwise;
+//             data.id = id; 
+//             //Serial.println(String(data.id) + String(data.clockwise));
+// }
+
+void EasyRotary::startup(void (*function)(bool clockwise,int id)){
+    ActionFunction = function;
+    pinMode(arduinoIntPin,INPUT);
     mcp.begin();      // use default address 0
     mcp.readINTCAPAB(); //read this so that the interrupt is cleared
 
@@ -129,7 +137,6 @@ RotaryData EasyRotary::checkInterrupt() {
         detachInterrupt(digitalPinToInterrupt(arduinoIntPin));
         handleInterrupt();
         attachInterrupt(digitalPinToInterrupt(arduinoIntPin),intCallBack,FALLING);
-        
     }
     data.changed = awakenByInterrupt;
     return data;
